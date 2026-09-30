@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aldermere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--ink:#161a2e;--panel:#20253f;--raise:#2a3052;--line:#3d4575;--text:#ebe6d8;--dim:#9ea3c4;--gold:#d6a84a;
+--combat:#d9645f;--gathering:#58b08f;--crafting:#8f96e6;
+--serif:'Cinzel',Georgia,serif;--sans:'Alegreya Sans',system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--text);font:17px/1.4 var(--sans)}
+body{padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button:disabled{cursor:not-allowed;opacity:.45}
+h1,h2,h3{font-family:var(--serif);margin:0;font-weight:700}
+.top{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.top h1{font-size:1.4rem;color:var(--gold)}
+#task{font-size:.95rem;color:var(--dim)}
+.track{height:8px;background:var(--ink);border-radius:4px;margin-top:4px;overflow:hidden}
+#bar{height:100%;width:0;background:var(--gold)}
+.gold{color:var(--gold);font-weight:700;white-space:nowrap}
+.top .stop{background:none;border:1px solid var(--line);border-radius:6px;padding:4px 12px;margin-left:10px}
+.wrap{display:grid;grid-template-columns:210px 1fr 230px;gap:16px;padding:16px;max-width:1300px;margin:0 auto}
+aside,.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.reg{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;padding:8px 10px;margin-bottom:4px}
+.reg b{font-family:var(--serif);display:block}
+.reg small{color:var(--dim);font-size:.85rem}
+.reg.on{background:var(--raise);border-color:var(--gold)}
+#main h2{font-size:1.6rem;margin-bottom:2px}
+.blurb{color:var(--dim);margin:0 0 12px}
+.skills{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.skill{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:12px}
+.skill.combat{--c:var(--combat)}.skill.gathering{--c:var(--gathering)}.skill.crafting{--c:var(--crafting)}
+.skill header{display:flex;justify-content:space-between;align-items:baseline}
+.skill h3{color:var(--c)}
+.skill header span{font-size:.9rem;color:var(--dim)}
+.xp{height:6px;background:var(--ink);border-radius:3px;margin:8px 0 10px;overflow:hidden}
+.xp i{display:block;height:100%;background:var(--c)}
+ul{list-style:none;margin:0;padding:0}
+.act{width:100%;text-align:left;background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.act b{display:block}.act small{color:var(--dim);font-size:.85rem}
+.act.on{border-color:var(--c);box-shadow:inset 3px 0 0 var(--c)}
+.inv li{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+.inv li b{color:var(--gold)}
+aside h3{font-size:1rem;margin-bottom:8px}
+.btn{margin-top:10px;width:100%;background:var(--raise);border:1px solid var(--gold);border-radius:6px;padding:6px}
+.log{margin-top:14px;font-size:.9rem;color:var(--dim)}
+.log li{padding:2px 0}
+.reset{margin-top:14px;background:none;border:none;color:var(--dim);font-size:.8rem;text-decoration:underline;padding:0}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}.skills{grid-template-columns:1fr}.top{grid-template-columns:1fr auto}.top h1{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Aldermere</h1>
+  <div><div id="task">Idle. Choose a task below.</div><div class="track"><div id="bar"></div></div></div>
+  <div><span class="gold"><span id="gold">0</span> gold</span><button class="stop" data-stop>Stop</button></div>
+</div>
+<div class="wrap">
+  <aside><h3>Regions</h3><div id="nav"></div></aside>
+  <div id="main"></div>
+  <aside class="inv"><h3>Satchel</h3><ul id="inv"></ul><button class="btn" data-sell>Sell crafted goods</button><ul class="log" id="log"></ul><button class="reset" data-reset>Erase save</button></aside>
+</div>
+
+<script>
+/* ============ GAME DATA (add regions, skills and actions here) ============ */
+// Skill list. To add a fourth root skill, add it here, add a --color + .skill.<id> rule in CSS,
+// then add an array of actions under that id in every region.
+const SKILLS=[['combat','Combat'],['gathering','Gathering'],['crafting','Crafting']];
+
+// Rule for opening the next region: every skill mastered in the previous one.
+// (Change to `.some` to require only one mastered skill.)
+const unlocksNext=(prev)=>SKILLS.every(([k])=>level(prev,k).l>=prev.max);
+
+// Action helpers. lvl = level required, sec = duration, xp = skill xp gained.
+const C=(name,lvl,sec,xp,drops,gold)=>({name,lvl,sec,xp,drops,gold});      // fight: drops + gold
+const G=(name,lvl,sec,xp,drops)=>({name,lvl,sec,xp,drops});                 // gather: drops
+const K=(name,lvl,sec,xp,cost,value)=>({name,lvl,sec,xp,cost,value});       // craft: cost -> 1 item named after the recipe
+
+const REGIONS=[
+{id:'greenhollow',name:'Greenhollow',blurb:'Meadows and old woods. A gentle start.',max:10,scale:1,
+ combat:[C('Wild Boar',1,4,6,{'Boar Hide':[1,2]},[1,3]),C('Forest Wolf',4,5,14,{'Wolf Pelt':[1,1]},[2,6]),C('Bandit Scout',7,6,26,{'Iron Scrap':[1,2]},[4,9])],
+ gathering:[G('Oak Logs',1,3,5,{'Oak Log':[1,2]}),G('Copper Seam',3,4,10,{'Copper Ore':[1,2]}),G('Moonpetal Patch',6,4,16,{'Moonpetal':[1,2]}),G('Ironvein',8,5,24,{'Iron Ore':[1,1]})],
+ crafting:[K('Oak Plank',1,3,6,{'Oak Log':2},3),K('Copper Ingot',3,4,12,{'Copper Ore':2},6),K('Hide Jerkin',5,5,20,{'Boar Hide':3,'Oak Plank':1},14),K('Iron Ingot',8,6,30,{'Iron Ore':2,'Copper Ingot':1},22)]},
+{id:'ashen',name:'Ashen Reach',blurb:'A scorched plain of vents and cinder.',max:10,scale:6,
+ combat:[C('Cinder Hound',1,5,40,{'Ember Fang':[1,2]},[8,14]),C('Ash Wraith',5,6,80,{'Wraith Dust':[1,2]},[14,24]),C('Obsidian Golem',9,8,140,{'Obsidian Shard':[1,1]},[30,50])],
+ gathering:[G('Ashwood Stand',1,4,30,{'Ashwood':[1,2]}),G('Sulfur Vent',4,5,60,{'Sulfur':[1,2]}),G('Emberglass Seam',8,6,110,{'Emberglass':[1,1]})],
+ crafting:[K('Ashwood Plank',1,4,30,{'Ashwood':2},14),K('Sulfur Flask',4,5,60,{'Sulfur':2,'Ashwood Plank':1},40),K('Emberglass Blade',8,7,120,{'Emberglass':2,'Iron Ingot':1,'Ashwood Plank':2},120)]}
+];
+
+/* ============ ENGINE ============ */
+const $=s=>document.querySelector(s), KEY='aldermere.save.v1', OFFLINE_CAP=8*3600e3;
+const VALUE={};REGIONS.forEach(r=>r.crafting.forEach(a=>VALUE[a.name]=a.value));
+const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[]});
+let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return Object.assign(fresh(),s)}catch(e){}return fresh()})();
+let dirty=true;
+
+const need=(r,l)=>Math.round(40*Math.pow(l,1.7)*r.scale);
+function level(r,k){let x=S.xp[r.id+':'+k]||0,l=1;while(l<r.max&&x>=need(r,l)){x-=need(r,l);l++}return{l,x,n:l<r.max?need(r,l):0}}
+const isOpen=i=>i===0||unlocksNext(REGIONS[i-1]);
+const roll=([a,b])=>a+Math.floor(Math.random()*(b-a+1));
+const note=s=>{S.log.unshift(s);S.log.length=Math.min(S.log.length,6)};
+const cur=()=>S.active&&REGIONS[S.active.r][S.active.k][S.active.a];
+const canDo=A=>!A.cost||Object.keys(A.cost).every(i=>(S.inv[i]||0)>=A.cost[i]);
+function stop(msg){S.active=null;S.prog=0;if(msg)note(msg);dirty=true}
+
+function finish(A){
+  const R=REGIONS[S.active.r],k=S.active.k,before=level(R,k).l;
+  if(A.cost){for(const i in A.cost)S.inv[i]-=A.cost[i];S.inv[A.name]=(S.inv[A.name]||0)+1}
+  else{for(const i in A.drops)S.inv[i]=(S.inv[i]||0)+roll(A.drops[i]);if(A.gold)S.gold+=roll(A.gold)}
+  if(before<R.max)S.xp[R.id+':'+k]=(S.xp[R.id+':'+k]||0)+A.xp;
+  const after=level(R,k).l;
+  if(after>before)note(`${k[0].toUpperCase()+k.slice(1)} reached level ${after} in ${R.name}.`);
+  if(after>=R.max&&before<R.max)note(`${k[0].toUpperCase()+k.slice(1)} mastered in ${R.name}.`);
+  dirty=true;
+}
+function tick(ms){
+  if(!S.active)return;S.prog+=ms;
+  for(let g=0;S.active&&g<20000;g++){
+    const A=cur(),d=A.sec*1000;
+    if(!canDo(A)){stop('Out of materials for '+A.name+'.');break}
+    if(S.prog<d)break;
+    S.prog-=d;finish(A);
+  }
+}
+
+/* ============ UI ============ */
+const list=o=>Object.entries(o).map(([i,v])=>Array.isArray(v)?`${v[0]===v[1]?v[0]:v[0]+'-'+v[1]} ${i}`:`${v} ${i}`).join(', ');
+function render(){
+  const R=REGIONS[S.view];
+  $('#gold').textContent=S.gold;
+  $('#nav').innerHTML=REGIONS.map((r,i)=>{const o=isOpen(i);return `<button class="reg ${i===S.view?'on':''}" data-view="${i}" ${o?'':'disabled'}><b>${r.name}</b><small>${o?r.blurb:'Master every skill in '+REGIONS[i-1].name+' to enter.'}</small></button>`}).join('');
+  $('#main').innerHTML=`<h2>${R.name}</h2><p class="blurb">${R.blurb}</p><div class="skills">`+SKILLS.map(([k,n])=>{
+    const L=level(R,k),pct=L.n?L.x/L.n*100:100;
+    return `<section class="skill ${k}"><header><h3>${n}</h3><span>${L.l>=R.max?'Mastered':`Level ${L.l} of ${R.max}`}</span></header><div class="xp"><i style="width:${pct}%"></i></div><ul>`+
+    R[k].map((A,a)=>{
+      const lock=L.l<A.lvl,on=S.active&&S.active.r===S.view&&S.active.k===k&&S.active.a===a;
+      const info=lock?`Requires level ${A.lvl}`:`${A.sec}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')}`;
+      return `<li><button class="act ${on?'on':''}" data-start="${k}:${a}" ${lock?'disabled':''}><b>${A.name}</b><small>${info}</small></button></li>`}).join('')+`</ul></section>`}).join('')+'</div>';
+  const items=Object.entries(S.inv).filter(e=>e[1]>0).sort();
+  $('#inv').innerHTML=items.length?items.map(([n,c])=>`<li><span>${n}</span><b>${c}</b></li>`).join(''):'<li><span>Empty. Start a gathering task.</span></li>';
+  $('#log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
+  const A=cur();$('#task').textContent=A?`${A.name} in ${REGIONS[S.active.r].name}`:'Idle. Choose a task below.';
+  dirty=false;
+}
+function sell(){let g=0;for(const n in VALUE){if(S.inv[n]>0){g+=S.inv[n]*VALUE[n];S.inv[n]=0}}if(g){S.gold+=g;note(`Sold crafted goods for ${g} gold.`)}else note('No crafted goods to sell.')}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
+  if(d.view!==undefined)S.view=+d.view;
+  else if(d.start){const[k,a]=d.start.split(':');S.active={r:S.view,k,a:+a};S.prog=0}
+  else if('stop' in d)stop();
+  else if('sell' in d)sell();
+  else if('reset' in d){if(confirm('Erase your save and start over?'))S=fresh()}
+  render();save();
+});
+
+function save(){try{S.t=Date.now();localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+// Offline progress
+const away=Math.min(Date.now()-S.t,OFFLINE_CAP);
+if(S.active&&away>5000){tick(away);note(`You were away for ${Math.round(away/60000)} min; your task kept running.`)}
+
+// Main loop
+let last=Date.now(),lastSave=last;
+setInterval(()=>{
+  const now=Date.now();tick(now-last);last=now;
+  if(dirty)render();
+  const A=cur();$('#bar').style.width=A?Math.min(100,S.prog/(A.sec*10))+'%':'0';
+  if(now-lastSave>10000){save();lastSave=now}
+},100);
+addEventListener('beforeunload',save);
+render();
+</script>
+</body>
+</html>
