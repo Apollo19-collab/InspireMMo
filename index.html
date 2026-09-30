@@ -87,72 +87,51 @@ aside,.card,.skill{background:linear-gradient(180deg,#272d50,#1c2140);box-shadow
 .sheet h3{margin:12px 0 6px;color:var(--gold);font-size:1rem}
 .portrait{width:100%;max-width:200px;display:block;margin:0 auto 10px;border-radius:10px;border:1px solid var(--line)}
 .sheet>div:first-child{text-align:center}.sheet h2{font-size:1.3rem}
-.eqs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.eqs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .eq{background:none;border:none;padding:0;text-align:center}.eq small{display:block;color:var(--dim)}.eq .tile{margin:0 auto 2px}
 .attrs li{padding:3px 0}
 .sheet table{width:100%;border-collapse:collapse}
 .sheet th,.sheet td{padding:6px;text-align:left;border-bottom:1px solid var(--line)}
 th.combat,td.combat{color:var(--combat)}th.gathering,td.gathering{color:var(--gathering)}th.crafting,td.crafting{color:var(--crafting)}
+.soc{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+.dg,.party{padding:14px;margin-bottom:12px}.party ul{margin:8px 0}.party li{padding:2px 0}
+.chat{padding:12px}.chat h3{margin-bottom:8px}.chat ul{height:280px;overflow:auto;margin:0 0 8px}.chat li{padding:2px 0;word-break:break-word}.chat li b{color:var(--gold)}
+.chat input{flex:1;min-width:0;background:#12162d;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:6px 8px;font:inherit}
+.chat .btn{width:auto;padding:6px 14px}
+.lobby{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.chips{align-items:center;flex-wrap:wrap}
+@media(max-width:980px){.soc{grid-template-columns:1fr}}
+.gate{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:var(--ink)}.gate[hidden]{display:none}
+.gate .card{width:min(360px,92vw);padding:22px;display:grid;gap:10px}.gate h1{text-align:center}
+.gate input{background:#12162d;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:8px 10px;font:inherit}
+.err{color:var(--combat);margin:0;min-height:1.2em}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 @media(max-width:980px){.wrap{grid-template-columns:1fr}.invwrap,.sheet{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="tex" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="4" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="g"/><feComponentTransfer in="g" result="g2"><feFuncR type="linear" slope=".7" intercept=".5"/><feFuncG type="linear" slope=".7" intercept=".5"/><feFuncB type="linear" slope=".7" intercept=".5"/><feFuncA type="linear" slope="0" intercept="1"/></feComponentTransfer><feComposite in="g2" in2="SourceGraphic" operator="in" result="c"/><feBlend in="c" in2="SourceGraphic" mode="multiply"/></filter></svg>
+<div id="gate" class="gate"><div class="card"><h1>Aldermere</h1><p class="dim">Sign in to keep your progress in the cloud and play with others.</p><input id="gu" placeholder="Username" maxlength="16" autocomplete="username"><input id="gp" type="password" placeholder="Password" autocomplete="current-password"><p id="gerr" class="err"></p><div class="row"><button class="btn" data-auth="login">Log in</button><button class="btn" data-auth="register">Create account</button></div><button class="reset" data-offline>Play offline (this browser only, no multiplayer)</button></div></div>
 <div class="top">
   <h1>Aldermere</h1>
   <div><div id="task">Idle. Choose a task below.</div><div class="track"><div id="bar"></div></div></div>
-  <div><span class="gold"><span id="gold">0</span> gold</span><button class="stop" data-stop>Stop</button></div>
+  <div><span class="gold"><span id="gold">0</span> gold</span><button class="stop" data-stop>Stop</button><button class="stop" data-logout hidden>Log out</button></div>
 </div>
 <div class="wrap">
   <aside><h3>Regions</h3><div id="nav"></div><ul class="log" id="log"></ul><button class="reset" data-reset>Erase save</button></aside>
   <div><nav class="tabs" id="tabs"></nav><div id="main"></div></div>
 </div>
 
+<script src="data.js"></script>
 <script>
-/* ============ GAME DATA (add regions, skills and actions here) ============ */
-// Skill list. To add a fourth root skill, add it here, add a --color + .skill.<id> rule in CSS,
-// then add an array of actions under that id in every region.
-const SKILLS=[['combat','Combat'],['gathering','Gathering'],['crafting','Crafting']];
-
-// Rule for opening the next region: every skill mastered in the previous one.
-// (Change to `.some` to require only one mastered skill.)
-const unlocksNext=(prev)=>SKILLS.every(([k])=>level(prev,k).l>=prev.max);
-
-// Action helpers. lvl = level required, sec = duration, xp = skill xp gained.
-const C=(name,lvl,sec,xp,drops,gold)=>({name,lvl,sec,xp,drops,gold});      // fight: drops + gold
-const G=(name,lvl,sec,xp,drops)=>({name,lvl,sec,xp,drops});                 // gather: drops
-const K=(name,lvl,sec,xp,cost,value)=>({name,lvl,sec,xp,cost,value});       // craft: cost -> 1 item named after the recipe
-
-const REGIONS=[
-{id:'greenhollow',hue:140,name:'Greenhollow',blurb:'Meadows and old woods. A gentle start.',max:10,scale:1,
- combat:[C('Wild Boar',1,4,6,{'Boar Hide':[1,2]},[1,3]),C('Forest Wolf',4,5,14,{'Wolf Pelt':[1,1]},[2,6]),C('Bandit Scout',7,6,26,{'Iron Scrap':[1,2]},[4,9])],
- gathering:[G('Oak Logs',1,3,5,{'Oak Log':[1,2]}),G('Copper Seam',3,4,10,{'Copper Ore':[1,2]}),G('Moonpetal Patch',6,4,16,{'Moonpetal':[1,2]}),G('Ironvein',8,5,24,{'Iron Ore':[1,1]})],
- crafting:[K('Oak Plank',1,3,6,{'Oak Log':2},3),K('Copper Ingot',3,4,12,{'Copper Ore':2},6),K('Hide Jerkin',5,5,20,{'Boar Hide':3,'Oak Plank':1},14),K('Iron Ingot',8,6,30,{'Iron Ore':2,'Copper Ingot':1},22),K('Copper Sword',6,5,24,{'Copper Ingot':3,'Oak Plank':1},30),K('Iron Pickaxe',9,7,36,{'Iron Ingot':2,'Oak Plank':2},40)]},
-{id:'ashen',hue:18,name:'Ashen Reach',blurb:'A scorched plain of vents and cinder.',max:10,scale:6,
- combat:[C('Cinder Hound',1,5,40,{'Ember Fang':[1,2]},[8,14]),C('Ash Wraith',5,6,80,{'Wraith Dust':[1,2]},[14,24]),C('Obsidian Golem',9,8,140,{'Obsidian Shard':[1,1]},[30,50])],
- gathering:[G('Ashwood Stand',1,4,30,{'Ashwood':[1,2]}),G('Sulfur Vent',4,5,60,{'Sulfur':[1,2]}),G('Emberglass Seam',8,6,110,{'Emberglass':[1,1]})],
- crafting:[K('Ashwood Plank',1,4,30,{'Ashwood':2},14),K('Sulfur Flask',4,5,60,{'Sulfur':2,'Ashwood Plank':1},40),K('Wraith Mantle',6,6,90,{'Wraith Dust':3,'Ashwood Plank':1},70),K('Emberglass Blade',8,7,120,{'Emberglass':2,'Iron Ingot':1,'Ashwood Plank':2},120)]}
-];
-
 /* ============ ENGINE ============ */
 const $=s=>document.querySelector(s), KEY='aldermere.save.v1', OFFLINE_CAP=8*3600e3;
 
-// name: [category, colour, tier, sell value, stats(gear only, in %)]
-const ITEMS={
-'Oak Log':['wood','#8a6238',1,2],'Oak Plank':['plank','#b98a52',1,3],'Copper Ore':['ore','#d9813f',1,2],'Copper Ingot':['ingot','#d98a4e',1,6],
-'Iron Ore':['ore','#b4bbd0',2,4],'Iron Ingot':['ingot','#aab0c6',2,22],'Iron Scrap':['ore','#7d8296',1,3],'Boar Hide':['hide','#a9775a',1,3],
-'Wolf Pelt':['hide','#8d939e',2,5],'Moonpetal':['herb','#b9a7ff',2,5],'Ember Fang':['fang','#e9d6b0',3,14],'Wraith Dust':['dust','#9f8cd6',3,10],
-'Obsidian Shard':['gem','#46456e',4,40],'Ashwood':['wood','#5d5857',3,10],'Ashwood Plank':['plank','#85797a',3,14],'Sulfur':['dust','#e3d45a',3,12],
-'Emberglass':['gem','#ff7a3c',4,36],
-'Hide Jerkin':['armor','#a9775a',1,14,{might:4}],'Wraith Mantle':['armor','#9f8cd6',3,70,{might:8,haste:3}],
-'Copper Sword':['weapon','#d98a4e',2,30,{might:6}],'Emberglass Blade':['weapon','#ff7a3c',4,120,{might:14,fortune:4}],
-'Iron Pickaxe':['tool','#aab0c6',2,40,{haste:8,fortune:3}],'Sulfur Flask':['charm','#e3d45a',3,40,{fortune:6}]};
 const CAT={wood:['Timber','Felled and ready for the sawmill.'],plank:['Plank','Cut timber for building and crafting.'],ore:['Ore','Raw stone with metal running through it.'],
 ingot:['Ingot','Smelted metal, ready for the forge.'],hide:['Hide','Cured skin for leatherwork.'],herb:['Herb','A delicate plant used in reagents.'],gem:['Gem','A rare crystal with a steady glow.'],
 dust:['Reagent','A fine powder with odd properties.'],fang:['Trophy','Taken from a beast of the Reach.'],weapon:['Weapon','Equip in the weapon slot.'],armor:['Armor','Equip in the armor slot.'],
-tool:['Tool','Equip in the tool slot.'],charm:['Charm','Equip in the charm slot.']};
-const SLOTS=['weapon','armor','tool','charm'],STATN={might:'Might',haste:'Haste',fortune:'Fortune'},TIERC={1:'#8a8fa8',2:'#58b08f',3:'#6d8fe8',4:'#c78bff'};
+tool:['Tool','Equip in the tool slot.'],hammer:['Hammer','Equip in the hammer slot.'],charm:['Charm','Equip in the charm slot.']};
+const STATN={might:'Might',haste:'Haste',fortune:'Fortune'},TIERC={1:'#8a8fa8',2:'#58b08f',3:'#6d8fe8',4:'#c78bff'};
 const cap=t=>t[0].toUpperCase()+t.slice(1);
 function shade(h,p){const n=parseInt(h.slice(1),16),t=p<0?0:255,k=Math.abs(p),f=x=>Math.round((t-x)*k+x);return `rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
 function icon(n){
@@ -170,13 +149,14 @@ function icon(n){
   weapon:`<polygon points="32,4 39,12 39,40 25,40 25,12" fill="${c}" stroke="${D}" stroke-width="1.5"/><path d="M32 6v34" stroke="${L}" stroke-width="2"/><rect x="18" y="40" width="28" height="5" rx="2" fill="#c9a24b"/><rect x="29" y="45" width="6" height="11" fill="#6a4a2e"/><circle cx="32" cy="58" r="3" fill="#c9a24b"/>`,
   armor:`<path d="M20 12L28 8Q32 15 36 8L44 12L57 23L49 31L44 27V54H20V27L15 31L7 23Z" fill="${c}" stroke="${D}" stroke-width="2"/><path d="M20 40h24" stroke="${D}" stroke-width="3"/>`,
   tool:`<path d="M14 58L42 20" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/><path d="M20 14Q46 6 58 30Q44 22 30 26Z" fill="${c}" stroke="${D}" stroke-width="1.5"/>`,
+  hammer:`<path d="M16 58L40 26" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/><rect x="28" y="10" width="28" height="16" rx="3" transform="rotate(35 42 18)" fill="${c}" stroke="${D}" stroke-width="1.5"/>`,
   charm:`<path d="M26 6h12v4h-3v12l13 26q3 8-6 8H22q-9 0-6-8l13-26V10h-3z" fill="#a9c7e8" opacity=".55" stroke="#dbe9ff" stroke-width="1.5"/><path d="M21 40h22l5 10q3 6-5 6H21q-8 0-5-6z" fill="${c}"/>`};
   return `<svg viewBox="0 0 64 64"><g filter="url(#tex)">${P[cat]}</g></svg>`;
 }
-const stats=()=>{const t={might:0,haste:0,fortune:0};for(const n of Object.values(S.equip))if(n)for(const k in ITEMS[n][4])t[k]+=ITEMS[n][4][k];return t};
-const stat=k=>stats()[k], dur=A=>A.sec*1000/(1+stat('haste')/100);
+const stat=(k,sk)=>{let t=0;for(const[sl,n]of Object.entries(S.equip))if(n&&(SLOT_SKILL[sl]==null||SLOT_SKILL[sl]===sk))t+=(ITEMS[n][4]||{})[k]||0;return t};
+const dur=(A,sk)=>A.sec*1000/(1+stat('haste',sk)/100);
 
-const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[],equip:{},name:'Wayfarer',tab:'world',f:'all',sel:null});
+const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[],equip:{},name:'Wayfarer',tab:'world',f:'all',sel:null,role:'striker',pid:Math.random().toString(36).slice(2)+Date.now().toString(36)});
 let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return Object.assign(fresh(),s)}catch(e){}return fresh()})();
 let dirty=true;
 
@@ -191,7 +171,7 @@ function stop(msg){S.active=null;S.prog=0;if(msg)note(msg);dirty=true}
 
 function finish(A){
   const R=REGIONS[S.active.r],k=S.active.k,before=level(R,k).l;
-  const x=()=>Math.random()*100<stat('fortune')?2:1,m=k==='combat'?1+stat('might')/100:1;
+  const x=()=>Math.random()*100<stat('fortune',k)?2:1,m=k==='combat'?1+stat('might',k)/100:1;
   if(A.cost){for(const i in A.cost)S.inv[i]-=A.cost[i];S.inv[A.name]=(S.inv[A.name]||0)+x()}
   else{for(const i in A.drops)S.inv[i]=(S.inv[i]||0)+roll(A.drops[i])*x();if(A.gold)S.gold+=Math.round(roll(A.gold)*x()*m)}
   if(before<R.max)S.xp[R.id+':'+k]=(S.xp[R.id+':'+k]||0)+A.xp*m;
@@ -203,7 +183,7 @@ function finish(A){
 function tick(ms){
   if(!S.active)return;S.prog+=ms;
   for(let g=0;S.active&&g<20000;g++){
-    const A=cur(),d=dur(A);
+    const A=cur(),d=dur(A,S.active.k);
     if(!canDo(A)){stop('Out of materials for '+A.name+'.');break}
     if(S.prog<d)break;
     S.prog-=d;finish(A);
@@ -212,7 +192,7 @@ function tick(ms){
 
 /* ============ UI ============ */
 const list=o=>Object.entries(o).map(([i,v])=>Array.isArray(v)?`${v[0]===v[1]?v[0]:v[0]+'-'+v[1]} ${i}`:`${v} ${i}`).join(', ');
-const TABS=[['world','Adventure'],['inv','Inventory'],['char','Character']];
+const TABS=[['world','Adventure'],['inv','Inventory'],['char','Character'],['social','Social']];
 const isGear=n=>SLOTS.includes(ITEMS[n][0]);
 const tile=(n,c,z)=>`<span class="tile ${z||''}" style="--t:${TIERC[ITEMS[n][2]]}" title="${n}">${icon(n)}${c>1?`<b>${c}</b>`:''}</span>`;
 const statRows=o=>Object.entries(o||{}).map(([k,v])=>`<li>+${v}% ${STATN[k]}</li>`).join('');
@@ -223,7 +203,7 @@ function worldView(R){
     return `<section class="skill ${k}"><header><h3>${n}</h3><span>${L.l>=R.max?'Mastered':`Level ${L.l} of ${R.max}`}</span></header><div class="xp"><i style="width:${pct}%"></i></div><ul>`+
     R[k].map((A,a)=>{
       const lock=L.l<A.lvl,on=S.active&&S.active.r===S.view&&S.active.k===k&&S.active.a===a,pic=A.cost?A.name:Object.keys(A.drops)[0];
-      const info=lock?`Requires level ${A.lvl}`:`${(dur(A)/1000).toFixed(1)}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')}`;
+      const info=lock?`Requires level ${A.lvl}`:`${(dur(A,k)/1000).toFixed(1)}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')}`;
       return `<li><button class="act ${on?'on':''}" data-start="${k}:${a}" ${lock?'disabled':''}>${tile(pic,0,'sm')}<span class="tx"><b>${A.name}</b><small>${info}</small></span></button></li>`}).join('')+`</ul></section>`}).join('')+'</div>';
 }
 function invView(){
@@ -242,12 +222,12 @@ function portrait(){
   return `<svg class="portrait" viewBox="0 0 120 140"><rect width="120" height="140" fill="#1a1f3d"/><circle cx="60" cy="58" r="50" fill="#2b3262" opacity=".7"/><circle cx="60" cy="44" r="15" fill="#d9b48f"/><path d="M26 140Q28 82 60 76Q92 82 94 140Z" fill="${ac}" filter="url(#tex)"/>${w?`<rect x="98" y="50" width="6" height="70" rx="2" fill="${ITEMS[w][1]}" filter="url(#tex)"/>`:''}</svg>`;
 }
 function charView(){
-  const s=stats(),lv=REGIONS.reduce((t,r)=>t+SKILLS.reduce((u,[k])=>u+level(r,k).l-1,0),1);
+  const lv=REGIONS.reduce((t,r)=>t+SKILLS.reduce((u,[k])=>u+level(r,k).l-1,0),1);
   const eq=SLOTS.map(sl=>{const n=S.equip[sl];return `<button class="eq" ${n?`data-unequip="${sl}"`:'disabled'}>${n?tile(n,0):'<span class="tile empty"></span>'}<small>${cap(sl)}</small></button>`}).join('');
   const rows=REGIONS.map(r=>`<tr><th>${r.name}</th>${SKILLS.map(([k])=>{const L=level(r,k);return `<td class="${k}">${L.l>=r.max?'Max':L.l+' / '+r.max}</td>`}).join('')}</tr>`).join('');
-  return `<div class="sheet card"><div>${portrait()}<h2>${S.name}</h2><p class="dim">Adventurer level ${lv}</p><button class="chip" data-rename>Rename</button></div>
+  return `<div class="sheet card"><div>${portrait()}<h2>${S.name}</h2><p class="dim">Adventurer level ${lv}</p></div>
   <div><h3>Equipment</h3><div class="eqs">${eq}</div><p class="dim">Click equipped gear to unequip it.</p>
-  <h3>Attributes</h3><ul class="attrs"><li><b>Might ${s.might}%</b> <span class="dim">More combat xp and gold.</span></li><li><b>Haste ${s.haste}%</b> <span class="dim">Every task finishes faster.</span></li><li><b>Fortune ${s.fortune}%</b> <span class="dim">Chance to double a task's output.</span></li></ul>
+  <h3>Bonuses</h3><table><tr><th></th>${SKILLS.map(([k,n])=>`<th class="${k}">${n}</th>`).join('')}</tr>${['might','haste','fortune'].map(a=>`<tr><th>${STATN[a]}</th>${SKILLS.map(([k])=>`<td>${stat(a,k)}%</td>`).join('')}</tr>`).join('')}</table><p class="dim">Might: combat xp and gold. Haste: faster tasks. Fortune: chance to double output. Weapons and armor help combat, tools help gathering, hammers help crafting, charms help everything.</p>
   <h3>Skills</h3><table><tr><th></th>${SKILLS.map(([k,n])=>`<th class="${k}">${n}</th>`).join('')}</tr>${rows}</table></div></div>`;
 }
 function render(){
@@ -255,7 +235,8 @@ function render(){
   $('#gold').textContent=S.gold;
   $('#nav').innerHTML=REGIONS.map((r,i)=>{const o=isOpen(i);return `<button class="reg ${i===S.view?'on':''}" data-view="${i}" ${o?'':'disabled'}><b>${r.name}</b><small>${o?r.blurb:'Master every skill in '+REGIONS[i-1].name+' to enter.'}</small></button>`}).join('');
   $('#tabs').innerHTML=TABS.map(([k,n])=>`<button class="tab ${S.tab===k?'on':''}" data-tab="${k}">${n}</button>`).join('');
-  $('#main').innerHTML=S.tab==='inv'?invView():S.tab==='char'?charView():worldView(R);
+  if(S.tab==='social'){if(!$('#socD'))$('#main').innerHTML=socialShell();socialFill()}
+  else $('#main').innerHTML=S.tab==='inv'?invView():S.tab==='char'?charView():worldView(R);
   $('#log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
   const A=cur();$('#task').textContent=A?`${A.name} in ${REGIONS[S.active.r].name}`:'Idle. Choose a task in the Adventure tab.';
   dirty=false;
@@ -264,8 +245,54 @@ function sell(n,c){c=Math.min(c,S.inv[n]||0);if(!c)return;const g=c*ITEMS[n][3];
 function equip(n){const sl=ITEMS[n][0];if(!(S.inv[n]>0))return;const old=S.equip[sl];if(old)S.inv[old]=(S.inv[old]||0)+1;S.equip[sl]=n;S.inv[n]--;note(`Equipped ${n}.`)}
 function unequip(sl){const n=S.equip[sl];if(!n)return;S.inv[n]=(S.inv[n]||0)+1;S.equip[sl]=null;note(`Unequipped ${n}.`)}
 
+
+/* ============ MULTIPLAYER (talks to server.js over WebSocket) ============ */
+const NET={ok:false,dungeons:[],st:{online:[],parties:[],chat:[]},you:0,ws:null};
+const ROLES=[['tank','Tank'],['healer','Healer'],['striker','Striker']];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const power=()=>REGIONS.reduce((t,r)=>t+level(r,'combat').l-1,0)+2*stat('might','combat');
+const maxRegion=()=>{let m=0;REGIONS.forEach((r,i)=>{if(isOpen(i))m=i});return m};
+const prof=()=>({name:S.name,power:power(),region:maxRegion()});
+const nsend=o=>{if(NET.ok)NET.ws.send(JSON.stringify(o))};
+function connect(){
+  let ws;try{ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host)}catch(e){return}
+  NET.ws=ws;
+  ws.onopen=()=>{NET.ok=true;nsend({t:'hello',token:CLOUD.token});dirty=true};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
+    if(m.t==='init'){NET.you=m.you;NET.dungeons=m.dungeons}else if(m.t==='state')NET.st=m;else if(m.t==='result')applyResult(m);
+    dirty=true};
+  ws.onclose=()=>{NET.ok=false;dirty=true;setTimeout(connect,4000)};
+}
+function applyResult(m){
+  const R=REGIONS[m.region],key=R.id+':combat';
+  S.gold+=m.gold;if(m.xp&&level(R,'combat').l<R.max)S.xp[key]=(S.xp[key]||0)+m.xp;
+  for(const i in m.items)S.inv[i]=(S.inv[i]||0)+m.items[i];
+  note(m.success?`${m.name} cleared! +${m.gold} gold, +${m.xp} combat xp.`:`${m.name} failed. You salvaged ${m.gold} gold.`);
+  if(m.success&&Object.keys(m.items).length)note('Loot: '+list(m.items));
+  save();
+}
+const socialShell=()=>`<div class="soc"><div><div class="chips" id="socHead"></div><div id="socD"></div></div><div class="card chat"><h3>Tavern <span class="dim" id="online"></span></h3><ul id="chatlog"></ul><div class="row"><input id="chatin" maxlength="200" placeholder="Say something" autocomplete="off"><button class="btn" data-chat>Send</button></div></div></div>`;
+function sendChat(){const i=$('#chatin');if(i&&i.value.trim()){nsend({t:'chat',text:i.value});i.value=''}}
+function socialFill(){
+  const st=NET.st,me=st.parties.find(q=>q.members.some(m=>m.id===NET.you));
+  $('#online').textContent=NET.ok?`${st.online.length} online`:'offline';
+  $('#socHead').innerHTML='<span class="dim">Your role:</span>'+ROLES.map(([k,n])=>`<button class="chip ${S.role===k?'on':''}" data-role="${k}">${n}</button>`).join('')+`<span class="dim">Power ${power()}</span>`;
+  const log=$('#chatlog');log.innerHTML=st.chat.map(c=>`<li><b>${esc(c.n)}</b> ${esc(c.x)}</li>`).join('');log.scrollTop=1e6;
+  let h='';
+  if(!NET.ok)h='<div class="card dg"><p class="dim">Not connected. Multiplayer needs the Node server (run <code>npm start</code> or deploy on Railway). Retrying...</p></div>';
+  else if(me){const d=NET.dungeons.find(x=>x.id===me.d),lead=me.leader===NET.you;
+    h=`<div class="card party"><h3>${d.name}</h3><p class="dim">${me.status==='running'?'In progress':'Gathering party'} (${me.members.length}/${d.size})</p><ul>${me.members.map(m=>`<li><b>${esc(m.name)}</b>, ${cap(m.role)}, power ${m.power}${m.id===me.leader?' (leader)':''}</li>`).join('')}</ul>`+
+    (me.status==='running'?`<div class="track"><div style="width:${me.progress*100}%;background:var(--gold);height:100%"></div></div>`:`<div class="row">${lead?`<button class="btn" data-go ${me.members.length<d.min?'disabled':''}>Enter dungeon</button>`:''}<button class="btn" data-leave>Leave party</button></div><p class="dim">Needs ${d.min}+ adventurers. One of each role boosts the whole party.</p>`)+'</div>'}
+  else h=NET.dungeons.map(d=>{const ok=maxRegion()>=d.region,ps=st.parties.filter(q=>q.d===d.id&&q.status==='lobby');
+    return `<div class="card dg"><h3>${d.name}</h3><p class="dim">${d.blurb} Party of ${d.min}-${d.size}. Difficulty ${d.difficulty}, about ${d.secs}s.</p><p>Loot: ${list(d.drops)}, ${d.gold[0]}-${d.gold[1]} gold, ${d.xp} combat xp. Rare drop: ${d.rare[0]}.</p>`+
+      (ok?`<button class="btn" data-create="${d.id}">Form a party</button>`:`<p class="dim">Open ${REGIONS[d.region].name} to enter.</p>`)+
+      ps.map(q=>`<div class="lobby"><span>${esc(q.members[0].name)}'s party, ${q.members.length}/${d.size}</span><button class="chip" data-join="${q.id}" ${q.members.length>=d.size||!ok?'disabled':''}>Join</button></div>`).join('')+'</div>'}).join('');
+  $('#socD').innerHTML=h;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='chatin')sendChat()});
+
 document.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
+  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;if(!started&&!('auth' in d)&&!('offline' in d))return;
   if(d.view!==undefined){S.view=+d.view;S.tab='world'}
   else if(d.tab)S.tab=d.tab;
   else if(d.f)S.f=d.f;
@@ -275,28 +302,63 @@ document.addEventListener('click',e=>{
   else if(d.sell1)sell(d.sell1,1);
   else if(d.sellall)sell(d.sellall,S.inv[d.sellall]);
   else if('rename' in d){const v=prompt('Name your character',S.name);if(v&&v.trim())S.name=v.replace(/[<>&"]/g,'').trim().slice(0,16)||S.name}
+  else if(d.auth)doAuth(d.auth);
+  else if('offline' in d)startOffline();
+  else if('logout' in d)logout();
+  else if(d.role){S.role=d.role;nsend({t:'role',role:d.role})}
+  else if(d.create)nsend({t:'create',d:d.create,role:S.role});
+  else if(d.join)nsend({t:'join',party:d.join,role:S.role});
+  else if('leave' in d)nsend({t:'leave'});
+  else if('go' in d)nsend({t:'start'});
+  else if('chat' in d)sendChat();
   else if(d.start){const[k,a]=d.start.split(':');S.active={r:S.view,k,a:+a};S.prog=0}
   else if('stop' in d)stop();
   else if('reset' in d){if(confirm('Erase your save and start over?'))S=fresh()}
   render();save();
 });
 
-function save(){try{S.t=Date.now();localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){if(CLOUD.on||!started)return;try{S.t=Date.now();localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
-// Offline progress
-const away=Math.min(Date.now()-S.t,OFFLINE_CAP);
-if(S.active&&away>5000){tick(away);note(`You were away for ${Math.round(away/60000)} min; your task kept running.`)}
-
-// Main loop
-let last=Date.now(),lastSave=last;
+// Session and cloud saves
+const TKEY='aldermere.token',CLOUD={token:null,user:null,rev:0,on:false};
+let started=false,last=Date.now(),lastSave=last,pushing=false;
+const api=(p,b)=>fetch('/api/'+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b),keepalive:true}).then(r=>r.json());
+function adopt(sv,rev){S=Object.assign(fresh(),sv||{});S.name=CLOUD.user;CLOUD.rev=rev;dirty=true}
+function push(){
+  if(!CLOUD.on||pushing)return;pushing=true;S.t=Date.now();
+  api('save',{token:CLOUD.token,rev:CLOUD.rev,save:S}).then(r=>{pushing=false;
+    if(r.ok)CLOUD.rev=r.rev;
+    else{adopt(r.save,r.rev);note(r.stale?'Another session saved first. Your latest cloud save was loaded.':`The server rejected that progress (${r.reason}). Your last valid save was restored.`)}
+  }).catch(()=>{pushing=false});
+}
+function enterCloud(r){
+  CLOUD.token=r.token;CLOUD.user=r.user;CLOUD.on=true;
+  try{localStorage.setItem(TKEY,r.token)}catch(e){}
+  S=Object.assign(fresh(),r.save||{});S.name=r.user;CLOUD.rev=r.rev||0;begin();
+}
+async function doAuth(kind){
+  $('#gerr').textContent='';
+  try{const r=await api(kind,{user:$('#gu').value,pass:$('#gp').value});if(r.error)$('#gerr').textContent=r.error;else enterCloud(r)}
+  catch(e){$('#gerr').textContent='Could not reach the game server. You can still play offline.'}
+}
+function logout(){push();setTimeout(()=>{api('logout',{token:CLOUD.token}).catch(()=>{});try{localStorage.removeItem(TKEY)}catch(e){}location.reload()},500)}
+function startOffline(){CLOUD.on=false;begin()}
+function begin(){
+  const away=Math.min(Date.now()-S.t,OFFLINE_CAP);
+  if(S.active&&away>5000){tick(away);note(`You were away for ${Math.round(away/60000)} min; your task kept running.`)}
+  started=true;last=Date.now();lastSave=last;$('#gate').hidden=true;$('[data-logout]').hidden=!CLOUD.on;
+  dirty=true;render();if(CLOUD.on)connect();
+}
 setInterval(()=>{
+  if(!started)return;
   const now=Date.now();tick(now-last);last=now;
   if(dirty)render();
-  const A=cur();$('#bar').style.width=A?Math.min(100,S.prog/(dur(A)/100))+'%':'0';
-  if(now-lastSave>10000){save();lastSave=now}
+  const A=cur();$('#bar').style.width=A?Math.min(100,S.prog/(dur(A,S.active.k)/100))+'%':'0';
+  if(now-lastSave>10000){save();if(CLOUD.on)push();lastSave=now}
 },100);
-addEventListener('beforeunload',save);
-render();
+addEventListener('beforeunload',()=>{CLOUD.on?push():save()});
+let tk=null;try{tk=localStorage.getItem(TKEY)}catch(e){}
+if(tk)api('load',{token:tk}).then(r=>{if(r.error)throw 0;r.token=tk;enterCloud(r)}).catch(()=>{});
 </script>
 </body>
 </html>
