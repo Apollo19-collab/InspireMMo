@@ -105,6 +105,7 @@ th.combat,td.combat{color:var(--combat)}th.gathering,td.gathering{color:var(--ga
 .gate .card{width:min(360px,92vw);padding:22px;display:grid;gap:10px}.gate h1{text-align:center}
 .gate input{background:#12162d;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:8px 10px;font:inherit}
 .err{color:var(--combat);margin:0;min-height:1.2em}
+.perks{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}.perk{font-size:.82rem;color:var(--dim)}.perk.on{color:var(--c)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 @media(max-width:980px){.wrap{grid-template-columns:1fr}.invwrap,.sheet{grid-template-columns:1fr}}
 </style>
@@ -130,7 +131,7 @@ const $=s=>document.querySelector(s), KEY='aldermere.save.v1', OFFLINE_CAP=8*360
 const CAT={wood:['Timber','Felled and ready for the sawmill.'],plank:['Plank','Cut timber for building and crafting.'],ore:['Ore','Raw stone with metal running through it.'],
 ingot:['Ingot','Smelted metal, ready for the forge.'],hide:['Hide','Cured skin for leatherwork.'],herb:['Herb','A delicate plant used in reagents.'],gem:['Gem','A rare crystal with a steady glow.'],
 dust:['Reagent','A fine powder with odd properties.'],fang:['Trophy','Taken from a beast of the Reach.'],weapon:['Weapon','Equip in the weapon slot.'],armor:['Armor','Equip in the armor slot.'],
-tool:['Tool','Equip in the tool slot.'],hammer:['Hammer','Equip in the hammer slot.'],charm:['Charm','Equip in the charm slot.']};
+tool:['Tool','Equip in the tool slot.'],potion:['Consumable','Use it for a timed bonus.'],meat:['Meat','Fresh from the hunt.'],hammer:['Hammer','Equip in the hammer slot.'],charm:['Charm','Equip in the charm slot.']};
 const STATN={might:'Might',haste:'Haste',fortune:'Fortune'},TIERC={1:'#8a8fa8',2:'#58b08f',3:'#6d8fe8',4:'#c78bff'};
 const cap=t=>t[0].toUpperCase()+t.slice(1);
 function shade(h,p){const n=parseInt(h.slice(1),16),t=p<0?0:255,k=Math.abs(p),f=x=>Math.round((t-x)*k+x);return `rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
@@ -149,14 +150,20 @@ function icon(n){
   weapon:`<polygon points="32,4 39,12 39,40 25,40 25,12" fill="${c}" stroke="${D}" stroke-width="1.5"/><path d="M32 6v34" stroke="${L}" stroke-width="2"/><rect x="18" y="40" width="28" height="5" rx="2" fill="#c9a24b"/><rect x="29" y="45" width="6" height="11" fill="#6a4a2e"/><circle cx="32" cy="58" r="3" fill="#c9a24b"/>`,
   armor:`<path d="M20 12L28 8Q32 15 36 8L44 12L57 23L49 31L44 27V54H20V27L15 31L7 23Z" fill="${c}" stroke="${D}" stroke-width="2"/><path d="M20 40h24" stroke="${D}" stroke-width="3"/>`,
   tool:`<path d="M14 58L42 20" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/><path d="M20 14Q46 6 58 30Q44 22 30 26Z" fill="${c}" stroke="${D}" stroke-width="1.5"/>`,
+  potion:`<path d="M26 8h12v6l-3 4v4l10 22q3 8-6 8H25q-9 0-6-8l10-22v-4l-3-4z" fill="#d8e6f5" opacity=".5" stroke="#eef5ff" stroke-width="1.5"/><path d="M21 38h22l4 12q3 6-5 6H22q-8 0-5-6z" fill="${c}"/><rect x="25" y="5" width="14" height="5" rx="2" fill="#8a6238"/>`,
+  meat:`<ellipse cx="30" cy="34" rx="20" ry="15" fill="${c}" stroke="${D}" stroke-width="2"/><ellipse cx="30" cy="34" rx="8" ry="6" fill="${L}" opacity=".6"/><rect x="46" y="28" width="12" height="6" rx="3" fill="#efe6d2" stroke="${D}"/>`,
   hammer:`<path d="M16 58L40 26" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/><rect x="28" y="10" width="28" height="16" rx="3" transform="rotate(35 42 18)" fill="${c}" stroke="${D}" stroke-width="1.5"/>`,
   charm:`<path d="M26 6h12v4h-3v12l13 26q3 8-6 8H22q-9 0-6-8l13-26V10h-3z" fill="#a9c7e8" opacity=".55" stroke="#dbe9ff" stroke-width="1.5"/><path d="M21 40h22l5 10q3 6-5 6H21q-8 0-5-6z" fill="${c}"/>`};
   return `<svg viewBox="0 0 64 64"><g filter="url(#tex)">${P[cat]}</g></svg>`;
 }
-const stat=(k,sk)=>{let t=0;for(const[sl,n]of Object.entries(S.equip))if(n&&(SLOT_SKILL[sl]==null||SLOT_SKILL[sl]===sk))t+=(ITEMS[n][4]||{})[k]||0;return t};
+const stat=(k,sk)=>{let t=0,now=Date.now();
+  for(const[sl,n]of Object.entries(S.equip))if(n&&(SLOT_SKILL[sl]==null||SLOT_SKILL[sl]===sk))t+=(ITEMS[n][4]||{})[k]||0;
+  REGIONS.forEach(r=>{const L=level(r,sk).l;for(const[lv,o]of PERKS[sk]||[])if(L>=lv)t+=o[k]||0});
+  for(const b of S.buffs||[]){const e=ITEMS[b.n][4];if(b.until>now&&(e.for==='all'||e.for===sk))t+=e[k]||0}
+  return t};
 const dur=(A,sk)=>A.sec*1000/(1+stat('haste',sk)/100);
 
-const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[],equip:{},name:'Wayfarer',tab:'world',f:'all',sel:null,role:'striker',pid:Math.random().toString(36).slice(2)+Date.now().toString(36)});
+const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[],equip:{},name:'Wayfarer',tab:'world',f:'all',sel:null,buffs:[],role:'striker',pid:Math.random().toString(36).slice(2)+Date.now().toString(36)});
 let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return Object.assign(fresh(),s)}catch(e){}return fresh()})();
 let dirty=true;
 
@@ -166,14 +173,14 @@ const isOpen=i=>i===0||unlocksNext(REGIONS[i-1]);
 const roll=([a,b])=>a+Math.floor(Math.random()*(b-a+1));
 const note=s=>{S.log.unshift(s);S.log.length=Math.min(S.log.length,6)};
 const cur=()=>S.active&&REGIONS[S.active.r][S.active.k][S.active.a];
-const canDo=A=>!A.cost||Object.keys(A.cost).every(i=>(S.inv[i]||0)>=A.cost[i]);
+const canDo=A=>A.cost?Object.keys(A.cost).every(i=>(S.inv[i]||0)>=A.cost[i]):!A.tool||toolTier()>=A.tool;
 function stop(msg){S.active=null;S.prog=0;if(msg)note(msg);dirty=true}
 
 function finish(A){
   const R=REGIONS[S.active.r],k=S.active.k,before=level(R,k).l;
   const x=()=>Math.random()*100<stat('fortune',k)?2:1,m=k==='combat'?1+stat('might',k)/100:1;
   if(A.cost){for(const i in A.cost)S.inv[i]-=A.cost[i];S.inv[A.name]=(S.inv[A.name]||0)+x()}
-  else{for(const i in A.drops)S.inv[i]=(S.inv[i]||0)+roll(A.drops[i])*x();if(A.gold)S.gold+=Math.round(roll(A.gold)*x()*m)}
+  else{for(const i in A.drops)S.inv[i]=(S.inv[i]||0)+roll(A.drops[i])*x();if(A.gold)S.gold+=Math.round(roll(A.gold)*x()*m);if(A.rare&&Math.random()<A.rare[1]){S.inv[A.rare[0]]=(S.inv[A.rare[0]]||0)+1;note('Rare find: '+A.rare[0]+'!')}}
   if(before<R.max)S.xp[R.id+':'+k]=(S.xp[R.id+':'+k]||0)+A.xp*m;
   const after=level(R,k).l;
   if(after>before)note(`${k[0].toUpperCase()+k.slice(1)} reached level ${after} in ${R.name}.`);
@@ -184,7 +191,7 @@ function tick(ms){
   if(!S.active)return;S.prog+=ms;
   for(let g=0;S.active&&g<20000;g++){
     const A=cur(),d=dur(A,S.active.k);
-    if(!canDo(A)){stop('Out of materials for '+A.name+'.');break}
+    if(!canDo(A)){stop('Missing materials or tool for '+A.name+'.');break}
     if(S.prog<d)break;
     S.prog-=d;finish(A);
   }
@@ -195,15 +202,18 @@ const list=o=>Object.entries(o).map(([i,v])=>Array.isArray(v)?`${v[0]===v[1]?v[0
 const TABS=[['world','Adventure'],['inv','Inventory'],['char','Character'],['social','Social']];
 const isGear=n=>SLOTS.includes(ITEMS[n][0]);
 const tile=(n,c,z)=>`<span class="tile ${z||''}" style="--t:${TIERC[ITEMS[n][2]]}" title="${n}">${icon(n)}${c>1?`<b>${c}</b>`:''}</span>`;
-const statRows=o=>Object.entries(o||{}).map(([k,v])=>`<li>+${v}% ${STATN[k]}</li>`).join('');
+const toolTier=()=>S.equip.tool?ITEMS[S.equip.tool][2]:0;
+const perkText=o=>Object.entries(o).map(([k,v])=>`+${v}% ${STATN[k]}`).join(', ');
+const buffLine=()=>{const a=(S.buffs||[]).filter(b=>b.until>Date.now());return a.length?`<p class="blurb">Active: ${a.map(b=>`${b.n} (${Math.ceil((b.until-Date.now())/60000)} min)`).join(', ')}</p>`:''};
+const statRows=o=>Object.entries(o||{}).filter(([k])=>STATN[k]).map(([k,v])=>`<li>+${v}% ${STATN[k]}</li>`).join('');
 
 function worldView(R){
-  return `<div class="banner" style="--h:${R.hue}"><h2>${R.name}</h2><p class="blurb">${R.blurb}</p></div><div class="skills">`+SKILLS.map(([k,n])=>{
+  return `<div class="banner" style="--h:${R.hue}"><h2>${R.name}</h2><p class="blurb">${R.blurb}</p>${buffLine()}</div><div class="skills">`+SKILLS.map(([k,n])=>{
     const L=level(R,k),pct=L.n?L.x/L.n*100:100;
-    return `<section class="skill ${k}"><header><h3>${n}</h3><span>${L.l>=R.max?'Mastered':`Level ${L.l} of ${R.max}`}</span></header><div class="xp"><i style="width:${pct}%"></i></div><ul>`+
+    return `<section class="skill ${k}"><header><h3>${n}</h3><span>${L.l>=R.max?'Mastered':`Level ${L.l} of ${R.max}`}</span></header><div class="xp"><i style="width:${pct}%"></i></div><div class="perks">${PERKS[k].map(([lv,o])=>`<span class="perk ${L.l>=lv?'on':''}">Level ${lv}: ${perkText(o)}</span>`).join('')}</div><ul>`+
     R[k].map((A,a)=>{
-      const lock=L.l<A.lvl,on=S.active&&S.active.r===S.view&&S.active.k===k&&S.active.a===a,pic=A.cost?A.name:Object.keys(A.drops)[0];
-      const info=lock?`Requires level ${A.lvl}`:`${(dur(A,k)/1000).toFixed(1)}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')}`;
+      const lock=L.l<A.lvl||(A.tool&&toolTier()<A.tool),on=S.active&&S.active.r===S.view&&S.active.k===k&&S.active.a===a,pic=A.cost?A.name:Object.keys(A.drops)[0];
+      const info=lock?(L.l<A.lvl?`Requires level ${A.lvl}`:`Needs a tier ${A.tool} tool equipped`):`${(dur(A,k)/1000).toFixed(1)}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')+(A.rare?`. Rare: ${A.rare[0]}`:'')}`;
       return `<li><button class="act ${on?'on':''}" data-start="${k}:${a}" ${lock?'disabled':''}>${tile(pic,0,'sm')}<span class="tx"><b>${A.name}</b><small>${info}</small></span></button></li>`}).join('')+`</ul></section>`}).join('')+'</div>';
 }
 function invView(){
@@ -213,7 +223,7 @@ function invView(){
   const grid=items.map(([n,c])=>`<button class="slot ${sel===n?'on':''}" data-sel="${n}">${tile(n,c)}</button>`).join('')+'<span class="slot empty"></span>'.repeat(total-items.length);
   let d='<div class="detail card"><p class="dim">Select an item to see its details.</p></div>';
   if(sel){const it=ITEMS[sel],g=isGear(sel);
-    d=`<div class="detail card">${tile(sel,0,'lg')}<h3>${sel}</h3><p class="dim">Tier ${it[2]} ${CAT[it[0]][0]}</p><p>${CAT[it[0]][1]}</p>${g?`<ul class="stats">${statRows(it[4])}</ul>`:''}<p class="dim">Owned ${S.inv[sel]}. Worth ${it[3]} gold each.</p><div class="row">${g?`<button class="btn" data-equip="${sel}">Equip</button>`:''}<button class="btn" data-sell1="${sel}">Sell 1</button><button class="btn" data-sellall="${sel}">Sell all</button></div></div>`}
+    d=`<div class="detail card">${tile(sel,0,'lg')}<h3>${sel}</h3><p class="dim">Tier ${it[2]} ${CAT[it[0]][0]}</p><p>${CAT[it[0]][1]}</p>${g||it[0]==='potion'?`<ul class="stats">${statRows(it[4])}${it[0]==='potion'?`<li>${it[4].for==='all'?'All skills':cap(it[4].for)} for ${it[4].secs/60} min</li>`:''}</ul>`:''}<p class="dim">Owned ${S.inv[sel]}. Worth ${it[3]} gold each.</p><div class="row">${g?`<button class="btn" data-equip="${sel}">Equip</button>`:''}${it[0]==='potion'?`<button class="btn" data-use="${sel}">Use</button>`:''}<button class="btn" data-sell1="${sel}">Sell 1</button><button class="btn" data-sellall="${sel}">Sell all</button></div></div>`}
   const chips=[['all','All'],['mat','Materials'],['gear','Gear']].map(([k,n])=>`<button class="chip ${S.f===k?'on':''}" data-f="${k}">${n}</button>`).join('');
   return `<div class="chips">${chips}</div><div class="invwrap"><div class="card grid">${items.length?'':'<p class="dim empty-msg">Nothing here yet. Gather, fight or craft to fill your satchel.</p>'}${grid}</div>${d}</div>`;
 }
@@ -241,6 +251,7 @@ function render(){
   const A=cur();$('#task').textContent=A?`${A.name} in ${REGIONS[S.active.r].name}`:'Idle. Choose a task in the Adventure tab.';
   dirty=false;
 }
+function useItem(n){const e=ITEMS[n][4];if(ITEMS[n][0]!=='potion'||!(S.inv[n]>0))return;S.inv[n]--;S.buffs=(S.buffs||[]).filter(b=>b.n!==n&&b.until>Date.now());S.buffs.push({n,until:Date.now()+e.secs*1000});note(`You used ${n}.`)}
 function sell(n,c){c=Math.min(c,S.inv[n]||0);if(!c)return;const g=c*ITEMS[n][3];S.inv[n]-=c;S.gold+=g;note(`Sold ${c} ${n} for ${g} gold.`)}
 function equip(n){const sl=ITEMS[n][0];if(!(S.inv[n]>0))return;const old=S.equip[sl];if(old)S.inv[old]=(S.inv[old]||0)+1;S.equip[sl]=n;S.inv[n]--;note(`Equipped ${n}.`)}
 function unequip(sl){const n=S.equip[sl];if(!n)return;S.inv[n]=(S.inv[n]||0)+1;S.equip[sl]=null;note(`Unequipped ${n}.`)}
@@ -297,6 +308,7 @@ document.addEventListener('click',e=>{
   else if(d.tab)S.tab=d.tab;
   else if(d.f)S.f=d.f;
   else if(d.sel)S.sel=d.sel;
+  else if(d.use)useItem(d.use);
   else if(d.equip)equip(d.equip);
   else if(d.unequip)unequip(d.unequip);
   else if(d.sell1)sell(d.sell1,1);

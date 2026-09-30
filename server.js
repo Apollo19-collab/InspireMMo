@@ -45,17 +45,17 @@ const dropVal = d => Object.entries(d).reduce((t, [n, r]) => t + avg(r) * ITEMS[
 // Fastest plausible xp/sec per skill (gear bonuses included) and best wealth/sec from any action, with slack.
 const RATE = {}; let WRATE = 0;
 for (const r of REGIONS) {
-  for (const [k] of SKILLS) RATE[r.id + ':' + k] = Math.max(...r[k].map(a => a.xp / a.sec)) * (k === 'combat' ? 2.5 : 1.6);
+  for (const [k] of SKILLS) RATE[r.id + ':' + k] = Math.max(...r[k].map(a => a.xp / a.sec)) * (k === 'combat' ? 3 : 1.8);
   for (const a of r.combat) WRATE = Math.max(WRATE, (dropVal(a.drops) + avg(a.gold)) / a.sec);
   for (const a of r.gathering) WRATE = Math.max(WRATE, dropVal(a.drops) / a.sec);
   for (const a of r.crafting) WRATE = Math.max(WRATE, (ITEMS[a.name][3] - Object.entries(a.cost).reduce((t, [n, c]) => t + c * ITEMS[n][3], 0)) / a.sec);
 }
-WRATE *= 2.2;
+WRATE *= 3;
 const wealth = s => s.gold + Object.entries(s.inv).reduce((t, [n, c]) => t + ITEMS[n][3] * c, 0) + Object.values(s.equip).reduce((t, n) => t + (n ? ITEMS[n][3] : 0), 0);
 
 function sanitize(x) {
   if (!x || typeof x !== 'object') return null;
-  const s = { t: Date.now(), xp: {}, inv: {}, gold: 0, active: null, prog: 0, view: 0, log: [], equip: {}, name: clean(x.name, 16), tab: 'world', f: 'all', sel: null, role: 'striker' };
+  const s = { t: Date.now(), xp: {}, inv: {}, gold: 0, active: null, prog: 0, view: 0, log: [], equip: {}, name: clean(x.name, 16), tab: 'world', f: 'all', sel: null, role: 'striker', buffs: [] };
   s.gold = Math.floor(x.gold);
   if (!Number.isFinite(s.gold) || s.gold < 0 || s.gold > 1e12) return null;
   for (const [k, v] of Object.entries(x.xp || {})) {
@@ -81,6 +81,10 @@ function sanitize(x) {
   if (['all', 'mat', 'gear'].includes(x.f)) s.f = x.f;
   if (ITEMS[x.sel]) s.sel = x.sel;
   if (ROLES.includes(x.role)) s.role = x.role;
+  for (const b of (Array.isArray(x.buffs) ? x.buffs : []).slice(0, 8)) {
+    const it = b && ITEMS[b.n];
+    if (it && it[0] === 'potion' && Number.isFinite(b.until) && b.until <= Date.now() + it[4].secs * 1000 + 60000) s.buffs.push({ n: b.n, until: b.until });
+  }
   return s;
 }
 // Returns null if the save is plausible, otherwise a short reason.
