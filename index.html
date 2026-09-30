@@ -52,18 +52,61 @@ aside h3{font-size:1rem;margin-bottom:8px}
 .log li{padding:2px 0}
 .reset{margin-top:14px;background:none;border:none;color:var(--dim);font-size:.8rem;text-decoration:underline;padding:0}
 @media(max-width:980px){.wrap{grid-template-columns:1fr}.skills{grid-template-columns:1fr}.top{grid-template-columns:1fr auto}.top h1{grid-column:1/-1}}
+
+/* ---- v0.2 visual pass ---- */
+body{background:radial-gradient(900px 500px at 50% -8%,#2d3468 0,transparent 70%),var(--ink);min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{position:relative;grid-template-columns:230px 1fr}
+aside,.card,.skill{background:linear-gradient(180deg,#272d50,#1c2140);box-shadow:inset 0 1px 0 #ffffff14,0 8px 20px #0005}
+.top{background:linear-gradient(180deg,#2b3157,#20253f);box-shadow:0 4px 16px #0006}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab,.chip{font-family:var(--serif);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 18px}
+.chip{font-family:var(--sans);padding:4px 14px;border-radius:99px}
+.tab.on,.chip.on{background:var(--raise);border-color:var(--gold);color:var(--gold)}
+.banner{border-radius:10px;padding:14px 18px;margin-bottom:12px;background:linear-gradient(120deg,hsl(var(--h) 38% 24%),hsl(var(--h) 30% 12%));border:1px solid hsl(var(--h) 40% 36%)}
+.banner .blurb{margin:0;color:#d5d8ea}
+.tile{--t:#8a8fa8;position:relative;display:block;width:56px;height:56px;border-radius:10px;border:2px solid var(--t);background:radial-gradient(circle at 35% 25%,#ffffff24,#0000 55%),#151934;box-shadow:inset 0 0 12px #0008,0 0 8px color-mix(in srgb,var(--t) 35%,transparent)}
+.tile svg{width:100%;height:100%;display:block}
+.tile b{position:absolute;right:4px;bottom:1px;font-size:.8rem;color:#fff;text-shadow:0 1px 2px #000,0 0 3px #000}
+.tile.sm{width:40px;height:40px;border-width:1px;flex:none}.tile.lg{width:96px;height:96px}
+.tile.empty{border-style:dashed;border-color:var(--line);box-shadow:none;background:#12162d}
+.act{display:flex;gap:10px;align-items:center}
+.tx b,.tx small{display:block}
+.act:not(:disabled):hover{border-color:var(--c)}
+.invwrap{display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;padding:12px}
+.slot{background:#12162d;border:1px solid var(--line);border-radius:10px;padding:3px;display:grid;place-items:center;aspect-ratio:1}
+.slot.empty{opacity:.45}.slot.on{border-color:var(--gold);box-shadow:0 0 0 2px #d6a84a55}
+.slot .tile{width:100%;height:auto;aspect-ratio:1}
+.empty-msg{grid-column:1/-1;margin:0}
+.chips{display:flex;gap:8px;margin-bottom:10px}
+.detail{padding:14px;text-align:center}.detail .tile{margin:0 auto 8px}.detail h3{font-size:1.1rem}
+.row{display:flex;gap:6px}.row .btn{margin:0}
+.dim{color:var(--dim)}.stats{color:var(--gathering);margin:6px 0}
+.sheet{display:grid;grid-template-columns:230px 1fr;gap:18px;padding:16px;text-align:left}
+.sheet h3{margin:12px 0 6px;color:var(--gold);font-size:1rem}
+.portrait{width:100%;max-width:200px;display:block;margin:0 auto 10px;border-radius:10px;border:1px solid var(--line)}
+.sheet>div:first-child{text-align:center}.sheet h2{font-size:1.3rem}
+.eqs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.eq{background:none;border:none;padding:0;text-align:center}.eq small{display:block;color:var(--dim)}.eq .tile{margin:0 auto 2px}
+.attrs li{padding:3px 0}
+.sheet table{width:100%;border-collapse:collapse}
+.sheet th,.sheet td{padding:6px;text-align:left;border-bottom:1px solid var(--line)}
+th.combat,td.combat{color:var(--combat)}th.gathering,td.gathering{color:var(--gathering)}th.crafting,td.crafting{color:var(--crafting)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}.invwrap,.sheet{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="tex" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="4" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="g"/><feComponentTransfer in="g" result="g2"><feFuncR type="linear" slope=".7" intercept=".5"/><feFuncG type="linear" slope=".7" intercept=".5"/><feFuncB type="linear" slope=".7" intercept=".5"/><feFuncA type="linear" slope="0" intercept="1"/></feComponentTransfer><feComposite in="g2" in2="SourceGraphic" operator="in" result="c"/><feBlend in="c" in2="SourceGraphic" mode="multiply"/></filter></svg>
 <div class="top">
   <h1>Aldermere</h1>
   <div><div id="task">Idle. Choose a task below.</div><div class="track"><div id="bar"></div></div></div>
   <div><span class="gold"><span id="gold">0</span> gold</span><button class="stop" data-stop>Stop</button></div>
 </div>
 <div class="wrap">
-  <aside><h3>Regions</h3><div id="nav"></div></aside>
-  <div id="main"></div>
-  <aside class="inv"><h3>Satchel</h3><ul id="inv"></ul><button class="btn" data-sell>Sell crafted goods</button><ul class="log" id="log"></ul><button class="reset" data-reset>Erase save</button></aside>
+  <aside><h3>Regions</h3><div id="nav"></div><ul class="log" id="log"></ul><button class="reset" data-reset>Erase save</button></aside>
+  <div><nav class="tabs" id="tabs"></nav><div id="main"></div></div>
 </div>
 
 <script>
@@ -82,20 +125,58 @@ const G=(name,lvl,sec,xp,drops)=>({name,lvl,sec,xp,drops});                 // g
 const K=(name,lvl,sec,xp,cost,value)=>({name,lvl,sec,xp,cost,value});       // craft: cost -> 1 item named after the recipe
 
 const REGIONS=[
-{id:'greenhollow',name:'Greenhollow',blurb:'Meadows and old woods. A gentle start.',max:10,scale:1,
+{id:'greenhollow',hue:140,name:'Greenhollow',blurb:'Meadows and old woods. A gentle start.',max:10,scale:1,
  combat:[C('Wild Boar',1,4,6,{'Boar Hide':[1,2]},[1,3]),C('Forest Wolf',4,5,14,{'Wolf Pelt':[1,1]},[2,6]),C('Bandit Scout',7,6,26,{'Iron Scrap':[1,2]},[4,9])],
  gathering:[G('Oak Logs',1,3,5,{'Oak Log':[1,2]}),G('Copper Seam',3,4,10,{'Copper Ore':[1,2]}),G('Moonpetal Patch',6,4,16,{'Moonpetal':[1,2]}),G('Ironvein',8,5,24,{'Iron Ore':[1,1]})],
- crafting:[K('Oak Plank',1,3,6,{'Oak Log':2},3),K('Copper Ingot',3,4,12,{'Copper Ore':2},6),K('Hide Jerkin',5,5,20,{'Boar Hide':3,'Oak Plank':1},14),K('Iron Ingot',8,6,30,{'Iron Ore':2,'Copper Ingot':1},22)]},
-{id:'ashen',name:'Ashen Reach',blurb:'A scorched plain of vents and cinder.',max:10,scale:6,
+ crafting:[K('Oak Plank',1,3,6,{'Oak Log':2},3),K('Copper Ingot',3,4,12,{'Copper Ore':2},6),K('Hide Jerkin',5,5,20,{'Boar Hide':3,'Oak Plank':1},14),K('Iron Ingot',8,6,30,{'Iron Ore':2,'Copper Ingot':1},22),K('Copper Sword',6,5,24,{'Copper Ingot':3,'Oak Plank':1},30),K('Iron Pickaxe',9,7,36,{'Iron Ingot':2,'Oak Plank':2},40)]},
+{id:'ashen',hue:18,name:'Ashen Reach',blurb:'A scorched plain of vents and cinder.',max:10,scale:6,
  combat:[C('Cinder Hound',1,5,40,{'Ember Fang':[1,2]},[8,14]),C('Ash Wraith',5,6,80,{'Wraith Dust':[1,2]},[14,24]),C('Obsidian Golem',9,8,140,{'Obsidian Shard':[1,1]},[30,50])],
  gathering:[G('Ashwood Stand',1,4,30,{'Ashwood':[1,2]}),G('Sulfur Vent',4,5,60,{'Sulfur':[1,2]}),G('Emberglass Seam',8,6,110,{'Emberglass':[1,1]})],
- crafting:[K('Ashwood Plank',1,4,30,{'Ashwood':2},14),K('Sulfur Flask',4,5,60,{'Sulfur':2,'Ashwood Plank':1},40),K('Emberglass Blade',8,7,120,{'Emberglass':2,'Iron Ingot':1,'Ashwood Plank':2},120)]}
+ crafting:[K('Ashwood Plank',1,4,30,{'Ashwood':2},14),K('Sulfur Flask',4,5,60,{'Sulfur':2,'Ashwood Plank':1},40),K('Wraith Mantle',6,6,90,{'Wraith Dust':3,'Ashwood Plank':1},70),K('Emberglass Blade',8,7,120,{'Emberglass':2,'Iron Ingot':1,'Ashwood Plank':2},120)]}
 ];
 
 /* ============ ENGINE ============ */
 const $=s=>document.querySelector(s), KEY='aldermere.save.v1', OFFLINE_CAP=8*3600e3;
-const VALUE={};REGIONS.forEach(r=>r.crafting.forEach(a=>VALUE[a.name]=a.value));
-const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[]});
+
+// name: [category, colour, tier, sell value, stats(gear only, in %)]
+const ITEMS={
+'Oak Log':['wood','#8a6238',1,2],'Oak Plank':['plank','#b98a52',1,3],'Copper Ore':['ore','#d9813f',1,2],'Copper Ingot':['ingot','#d98a4e',1,6],
+'Iron Ore':['ore','#b4bbd0',2,4],'Iron Ingot':['ingot','#aab0c6',2,22],'Iron Scrap':['ore','#7d8296',1,3],'Boar Hide':['hide','#a9775a',1,3],
+'Wolf Pelt':['hide','#8d939e',2,5],'Moonpetal':['herb','#b9a7ff',2,5],'Ember Fang':['fang','#e9d6b0',3,14],'Wraith Dust':['dust','#9f8cd6',3,10],
+'Obsidian Shard':['gem','#46456e',4,40],'Ashwood':['wood','#5d5857',3,10],'Ashwood Plank':['plank','#85797a',3,14],'Sulfur':['dust','#e3d45a',3,12],
+'Emberglass':['gem','#ff7a3c',4,36],
+'Hide Jerkin':['armor','#a9775a',1,14,{might:4}],'Wraith Mantle':['armor','#9f8cd6',3,70,{might:8,haste:3}],
+'Copper Sword':['weapon','#d98a4e',2,30,{might:6}],'Emberglass Blade':['weapon','#ff7a3c',4,120,{might:14,fortune:4}],
+'Iron Pickaxe':['tool','#aab0c6',2,40,{haste:8,fortune:3}],'Sulfur Flask':['charm','#e3d45a',3,40,{fortune:6}]};
+const CAT={wood:['Timber','Felled and ready for the sawmill.'],plank:['Plank','Cut timber for building and crafting.'],ore:['Ore','Raw stone with metal running through it.'],
+ingot:['Ingot','Smelted metal, ready for the forge.'],hide:['Hide','Cured skin for leatherwork.'],herb:['Herb','A delicate plant used in reagents.'],gem:['Gem','A rare crystal with a steady glow.'],
+dust:['Reagent','A fine powder with odd properties.'],fang:['Trophy','Taken from a beast of the Reach.'],weapon:['Weapon','Equip in the weapon slot.'],armor:['Armor','Equip in the armor slot.'],
+tool:['Tool','Equip in the tool slot.'],charm:['Charm','Equip in the charm slot.']};
+const SLOTS=['weapon','armor','tool','charm'],STATN={might:'Might',haste:'Haste',fortune:'Fortune'},TIERC={1:'#8a8fa8',2:'#58b08f',3:'#6d8fe8',4:'#c78bff'};
+const cap=t=>t[0].toUpperCase()+t.slice(1);
+function shade(h,p){const n=parseInt(h.slice(1),16),t=p<0?0:255,k=Math.abs(p),f=x=>Math.round((t-x)*k+x);return `rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
+function icon(n){
+  const [cat,c]=ITEMS[n],L=shade(c,.35),D=shade(c,-.4);
+  const P={
+  wood:`<rect x="8" y="22" width="42" height="22" rx="6" fill="${c}"/><ellipse cx="50" cy="33" rx="7" ry="11" fill="${L}"/><ellipse cx="50" cy="33" rx="3.5" ry="6" fill="none" stroke="${D}" stroke-width="1.5"/><path d="M14 28h28M14 38h30" stroke="${D}" stroke-width="1.2" opacity=".6"/>`,
+  plank:`<rect x="6" y="14" width="52" height="16" rx="2" fill="${c}"/><rect x="10" y="34" width="50" height="16" rx="2" fill="${D}"/><path d="M10 20h44M14 25h38M14 40h40M18 45h36" stroke="${L}" opacity=".5"/>`,
+  ore:`<polygon points="10,44 16,24 32,12 50,22 56,44 34,54" fill="#59607a"/><polygon points="16,24 32,12 34,30" fill="#7a829e"/><g fill="${c}"><circle cx="24" cy="38" r="5"/><circle cx="41" cy="32" r="4"/><circle cx="38" cy="45" r="3.5"/></g>`,
+  ingot:`<polygon points="8,46 16,30 50,30 58,46" fill="${c}"/><polygon points="16,30 50,30 46,22 20,22" fill="${L}"/><polygon points="8,46 58,46 56,51 10,51" fill="${D}"/><path d="M22 37h22" stroke="${L}" stroke-width="2" opacity=".7"/>`,
+  hide:`<path d="M14 20L26 14L38 18L50 14L54 30L46 36L52 50L38 46L32 54L26 46L12 50L18 36L10 28Z" fill="${c}" stroke="${D}" stroke-width="2"/><path d="M32 20v28" stroke="${D}" stroke-dasharray="3 3"/>`,
+  herb:`<path d="M32 58V28" stroke="#3f7d4d" stroke-width="3"/><g fill="${c}" stroke="${D}"><ellipse cx="32" cy="18" rx="6" ry="11"/><ellipse cx="32" cy="18" rx="6" ry="11" transform="rotate(60 32 28)"/><ellipse cx="32" cy="18" rx="6" ry="11" transform="rotate(-60 32 28)"/></g><circle cx="32" cy="28" r="4" fill="${L}"/>`,
+  gem:`<polygon points="32,6 56,26 32,58 8,26" fill="${c}" stroke="${D}" stroke-width="2"/><polygon points="32,6 44,26 32,58" fill="${L}" opacity=".45"/><polygon points="8,26 32,6 20,26" fill="${L}" opacity=".3"/><path d="M8 26h48" stroke="${D}" opacity=".6"/>`,
+  dust:`<path d="M8 52Q32 20 56 52Z" fill="${c}"/><g fill="${L}"><circle cx="24" cy="44" r="2"/><circle cx="36" cy="40" r="2.5"/><circle cx="44" cy="48" r="1.8"/><circle cx="30" cy="50" r="1.5"/></g><path d="M50 12l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="${L}"/>`,
+  fang:`<path d="M20 8Q52 16 42 58Q30 32 20 8Z" fill="${c}" stroke="${D}" stroke-width="2"/><path d="M26 14Q40 22 40 40" stroke="#fff" opacity=".5" fill="none"/>`,
+  weapon:`<polygon points="32,4 39,12 39,40 25,40 25,12" fill="${c}" stroke="${D}" stroke-width="1.5"/><path d="M32 6v34" stroke="${L}" stroke-width="2"/><rect x="18" y="40" width="28" height="5" rx="2" fill="#c9a24b"/><rect x="29" y="45" width="6" height="11" fill="#6a4a2e"/><circle cx="32" cy="58" r="3" fill="#c9a24b"/>`,
+  armor:`<path d="M20 12L28 8Q32 15 36 8L44 12L57 23L49 31L44 27V54H20V27L15 31L7 23Z" fill="${c}" stroke="${D}" stroke-width="2"/><path d="M20 40h24" stroke="${D}" stroke-width="3"/>`,
+  tool:`<path d="M14 58L42 20" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/><path d="M20 14Q46 6 58 30Q44 22 30 26Z" fill="${c}" stroke="${D}" stroke-width="1.5"/>`,
+  charm:`<path d="M26 6h12v4h-3v12l13 26q3 8-6 8H22q-9 0-6-8l13-26V10h-3z" fill="#a9c7e8" opacity=".55" stroke="#dbe9ff" stroke-width="1.5"/><path d="M21 40h22l5 10q3 6-5 6H21q-8 0-5-6z" fill="${c}"/>`};
+  return `<svg viewBox="0 0 64 64"><g filter="url(#tex)">${P[cat]}</g></svg>`;
+}
+const stats=()=>{const t={might:0,haste:0,fortune:0};for(const n of Object.values(S.equip))if(n)for(const k in ITEMS[n][4])t[k]+=ITEMS[n][4][k];return t};
+const stat=k=>stats()[k], dur=A=>A.sec*1000/(1+stat('haste')/100);
+
+const fresh=()=>({t:Date.now(),xp:{},inv:{},gold:0,active:null,prog:0,view:0,log:[],equip:{},name:'Wayfarer',tab:'world',f:'all',sel:null});
 let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return Object.assign(fresh(),s)}catch(e){}return fresh()})();
 let dirty=true;
 
@@ -110,9 +191,10 @@ function stop(msg){S.active=null;S.prog=0;if(msg)note(msg);dirty=true}
 
 function finish(A){
   const R=REGIONS[S.active.r],k=S.active.k,before=level(R,k).l;
-  if(A.cost){for(const i in A.cost)S.inv[i]-=A.cost[i];S.inv[A.name]=(S.inv[A.name]||0)+1}
-  else{for(const i in A.drops)S.inv[i]=(S.inv[i]||0)+roll(A.drops[i]);if(A.gold)S.gold+=roll(A.gold)}
-  if(before<R.max)S.xp[R.id+':'+k]=(S.xp[R.id+':'+k]||0)+A.xp;
+  const x=()=>Math.random()*100<stat('fortune')?2:1,m=k==='combat'?1+stat('might')/100:1;
+  if(A.cost){for(const i in A.cost)S.inv[i]-=A.cost[i];S.inv[A.name]=(S.inv[A.name]||0)+x()}
+  else{for(const i in A.drops)S.inv[i]=(S.inv[i]||0)+roll(A.drops[i])*x();if(A.gold)S.gold+=Math.round(roll(A.gold)*x()*m)}
+  if(before<R.max)S.xp[R.id+':'+k]=(S.xp[R.id+':'+k]||0)+A.xp*m;
   const after=level(R,k).l;
   if(after>before)note(`${k[0].toUpperCase()+k.slice(1)} reached level ${after} in ${R.name}.`);
   if(after>=R.max&&before<R.max)note(`${k[0].toUpperCase()+k.slice(1)} mastered in ${R.name}.`);
@@ -121,7 +203,7 @@ function finish(A){
 function tick(ms){
   if(!S.active)return;S.prog+=ms;
   for(let g=0;S.active&&g<20000;g++){
-    const A=cur(),d=A.sec*1000;
+    const A=cur(),d=dur(A);
     if(!canDo(A)){stop('Out of materials for '+A.name+'.');break}
     if(S.prog<d)break;
     S.prog-=d;finish(A);
@@ -130,31 +212,71 @@ function tick(ms){
 
 /* ============ UI ============ */
 const list=o=>Object.entries(o).map(([i,v])=>Array.isArray(v)?`${v[0]===v[1]?v[0]:v[0]+'-'+v[1]} ${i}`:`${v} ${i}`).join(', ');
+const TABS=[['world','Adventure'],['inv','Inventory'],['char','Character']];
+const isGear=n=>SLOTS.includes(ITEMS[n][0]);
+const tile=(n,c,z)=>`<span class="tile ${z||''}" style="--t:${TIERC[ITEMS[n][2]]}" title="${n}">${icon(n)}${c>1?`<b>${c}</b>`:''}</span>`;
+const statRows=o=>Object.entries(o||{}).map(([k,v])=>`<li>+${v}% ${STATN[k]}</li>`).join('');
+
+function worldView(R){
+  return `<div class="banner" style="--h:${R.hue}"><h2>${R.name}</h2><p class="blurb">${R.blurb}</p></div><div class="skills">`+SKILLS.map(([k,n])=>{
+    const L=level(R,k),pct=L.n?L.x/L.n*100:100;
+    return `<section class="skill ${k}"><header><h3>${n}</h3><span>${L.l>=R.max?'Mastered':`Level ${L.l} of ${R.max}`}</span></header><div class="xp"><i style="width:${pct}%"></i></div><ul>`+
+    R[k].map((A,a)=>{
+      const lock=L.l<A.lvl,on=S.active&&S.active.r===S.view&&S.active.k===k&&S.active.a===a,pic=A.cost?A.name:Object.keys(A.drops)[0];
+      const info=lock?`Requires level ${A.lvl}`:`${(dur(A)/1000).toFixed(1)}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')}`;
+      return `<li><button class="act ${on?'on':''}" data-start="${k}:${a}" ${lock?'disabled':''}>${tile(pic,0,'sm')}<span class="tx"><b>${A.name}</b><small>${info}</small></span></button></li>`}).join('')+`</ul></section>`}).join('')+'</div>';
+}
+function invView(){
+  const items=Object.entries(S.inv).filter(e=>e[1]>0&&ITEMS[e[0]]&&(S.f==='all'||(S.f==='gear')===isGear(e[0])))
+    .sort((a,b)=>ITEMS[a[0]][0].localeCompare(ITEMS[b[0]][0])||ITEMS[b[0]][2]-ITEMS[a[0]][2]||a[0].localeCompare(b[0]));
+  const total=Math.max(30,Math.ceil(items.length/6)*6),sel=S.sel&&S.inv[S.sel]>0?S.sel:null;
+  const grid=items.map(([n,c])=>`<button class="slot ${sel===n?'on':''}" data-sel="${n}">${tile(n,c)}</button>`).join('')+'<span class="slot empty"></span>'.repeat(total-items.length);
+  let d='<div class="detail card"><p class="dim">Select an item to see its details.</p></div>';
+  if(sel){const it=ITEMS[sel],g=isGear(sel);
+    d=`<div class="detail card">${tile(sel,0,'lg')}<h3>${sel}</h3><p class="dim">Tier ${it[2]} ${CAT[it[0]][0]}</p><p>${CAT[it[0]][1]}</p>${g?`<ul class="stats">${statRows(it[4])}</ul>`:''}<p class="dim">Owned ${S.inv[sel]}. Worth ${it[3]} gold each.</p><div class="row">${g?`<button class="btn" data-equip="${sel}">Equip</button>`:''}<button class="btn" data-sell1="${sel}">Sell 1</button><button class="btn" data-sellall="${sel}">Sell all</button></div></div>`}
+  const chips=[['all','All'],['mat','Materials'],['gear','Gear']].map(([k,n])=>`<button class="chip ${S.f===k?'on':''}" data-f="${k}">${n}</button>`).join('');
+  return `<div class="chips">${chips}</div><div class="invwrap"><div class="card grid">${items.length?'':'<p class="dim empty-msg">Nothing here yet. Gather, fight or craft to fill your satchel.</p>'}${grid}</div>${d}</div>`;
+}
+function portrait(){
+  const a=S.equip.armor,w=S.equip.weapon,ac=a?ITEMS[a][1]:'#4a5078';
+  return `<svg class="portrait" viewBox="0 0 120 140"><rect width="120" height="140" fill="#1a1f3d"/><circle cx="60" cy="58" r="50" fill="#2b3262" opacity=".7"/><circle cx="60" cy="44" r="15" fill="#d9b48f"/><path d="M26 140Q28 82 60 76Q92 82 94 140Z" fill="${ac}" filter="url(#tex)"/>${w?`<rect x="98" y="50" width="6" height="70" rx="2" fill="${ITEMS[w][1]}" filter="url(#tex)"/>`:''}</svg>`;
+}
+function charView(){
+  const s=stats(),lv=REGIONS.reduce((t,r)=>t+SKILLS.reduce((u,[k])=>u+level(r,k).l-1,0),1);
+  const eq=SLOTS.map(sl=>{const n=S.equip[sl];return `<button class="eq" ${n?`data-unequip="${sl}"`:'disabled'}>${n?tile(n,0):'<span class="tile empty"></span>'}<small>${cap(sl)}</small></button>`}).join('');
+  const rows=REGIONS.map(r=>`<tr><th>${r.name}</th>${SKILLS.map(([k])=>{const L=level(r,k);return `<td class="${k}">${L.l>=r.max?'Max':L.l+' / '+r.max}</td>`}).join('')}</tr>`).join('');
+  return `<div class="sheet card"><div>${portrait()}<h2>${S.name}</h2><p class="dim">Adventurer level ${lv}</p><button class="chip" data-rename>Rename</button></div>
+  <div><h3>Equipment</h3><div class="eqs">${eq}</div><p class="dim">Click equipped gear to unequip it.</p>
+  <h3>Attributes</h3><ul class="attrs"><li><b>Might ${s.might}%</b> <span class="dim">More combat xp and gold.</span></li><li><b>Haste ${s.haste}%</b> <span class="dim">Every task finishes faster.</span></li><li><b>Fortune ${s.fortune}%</b> <span class="dim">Chance to double a task's output.</span></li></ul>
+  <h3>Skills</h3><table><tr><th></th>${SKILLS.map(([k,n])=>`<th class="${k}">${n}</th>`).join('')}</tr>${rows}</table></div></div>`;
+}
 function render(){
   const R=REGIONS[S.view];
   $('#gold').textContent=S.gold;
   $('#nav').innerHTML=REGIONS.map((r,i)=>{const o=isOpen(i);return `<button class="reg ${i===S.view?'on':''}" data-view="${i}" ${o?'':'disabled'}><b>${r.name}</b><small>${o?r.blurb:'Master every skill in '+REGIONS[i-1].name+' to enter.'}</small></button>`}).join('');
-  $('#main').innerHTML=`<h2>${R.name}</h2><p class="blurb">${R.blurb}</p><div class="skills">`+SKILLS.map(([k,n])=>{
-    const L=level(R,k),pct=L.n?L.x/L.n*100:100;
-    return `<section class="skill ${k}"><header><h3>${n}</h3><span>${L.l>=R.max?'Mastered':`Level ${L.l} of ${R.max}`}</span></header><div class="xp"><i style="width:${pct}%"></i></div><ul>`+
-    R[k].map((A,a)=>{
-      const lock=L.l<A.lvl,on=S.active&&S.active.r===S.view&&S.active.k===k&&S.active.a===a;
-      const info=lock?`Requires level ${A.lvl}`:`${A.sec}s, ${A.xp} xp. ${A.cost?'Needs '+list(A.cost):'Yields '+list(A.drops)+(A.gold?', '+A.gold[0]+'-'+A.gold[1]+' gold':'')}`;
-      return `<li><button class="act ${on?'on':''}" data-start="${k}:${a}" ${lock?'disabled':''}><b>${A.name}</b><small>${info}</small></button></li>`}).join('')+`</ul></section>`}).join('')+'</div>';
-  const items=Object.entries(S.inv).filter(e=>e[1]>0).sort();
-  $('#inv').innerHTML=items.length?items.map(([n,c])=>`<li><span>${n}</span><b>${c}</b></li>`).join(''):'<li><span>Empty. Start a gathering task.</span></li>';
+  $('#tabs').innerHTML=TABS.map(([k,n])=>`<button class="tab ${S.tab===k?'on':''}" data-tab="${k}">${n}</button>`).join('');
+  $('#main').innerHTML=S.tab==='inv'?invView():S.tab==='char'?charView():worldView(R);
   $('#log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
-  const A=cur();$('#task').textContent=A?`${A.name} in ${REGIONS[S.active.r].name}`:'Idle. Choose a task below.';
+  const A=cur();$('#task').textContent=A?`${A.name} in ${REGIONS[S.active.r].name}`:'Idle. Choose a task in the Adventure tab.';
   dirty=false;
 }
-function sell(){let g=0;for(const n in VALUE){if(S.inv[n]>0){g+=S.inv[n]*VALUE[n];S.inv[n]=0}}if(g){S.gold+=g;note(`Sold crafted goods for ${g} gold.`)}else note('No crafted goods to sell.')}
+function sell(n,c){c=Math.min(c,S.inv[n]||0);if(!c)return;const g=c*ITEMS[n][3];S.inv[n]-=c;S.gold+=g;note(`Sold ${c} ${n} for ${g} gold.`)}
+function equip(n){const sl=ITEMS[n][0];if(!(S.inv[n]>0))return;const old=S.equip[sl];if(old)S.inv[old]=(S.inv[old]||0)+1;S.equip[sl]=n;S.inv[n]--;note(`Equipped ${n}.`)}
+function unequip(sl){const n=S.equip[sl];if(!n)return;S.inv[n]=(S.inv[n]||0)+1;S.equip[sl]=null;note(`Unequipped ${n}.`)}
 
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
-  if(d.view!==undefined)S.view=+d.view;
+  if(d.view!==undefined){S.view=+d.view;S.tab='world'}
+  else if(d.tab)S.tab=d.tab;
+  else if(d.f)S.f=d.f;
+  else if(d.sel)S.sel=d.sel;
+  else if(d.equip)equip(d.equip);
+  else if(d.unequip)unequip(d.unequip);
+  else if(d.sell1)sell(d.sell1,1);
+  else if(d.sellall)sell(d.sellall,S.inv[d.sellall]);
+  else if('rename' in d){const v=prompt('Name your character',S.name);if(v&&v.trim())S.name=v.replace(/[<>&"]/g,'').trim().slice(0,16)||S.name}
   else if(d.start){const[k,a]=d.start.split(':');S.active={r:S.view,k,a:+a};S.prog=0}
   else if('stop' in d)stop();
-  else if('sell' in d)sell();
   else if('reset' in d){if(confirm('Erase your save and start over?'))S=fresh()}
   render();save();
 });
@@ -170,7 +292,7 @@ let last=Date.now(),lastSave=last;
 setInterval(()=>{
   const now=Date.now();tick(now-last);last=now;
   if(dirty)render();
-  const A=cur();$('#bar').style.width=A?Math.min(100,S.prog/(A.sec*10))+'%':'0';
+  const A=cur();$('#bar').style.width=A?Math.min(100,S.prog/(dur(A)/100))+'%':'0';
   if(now-lastSave>10000){save();lastSave=now}
 },100);
 addEventListener('beforeunload',save);
